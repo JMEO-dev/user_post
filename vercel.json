@@ -1,0 +1,36 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "dist/main.js",
+            "use": "@vercel/nest"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "dist/main.js",
+            "methods": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "PATCH"
+            ],
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization"
+            }
+        }
+    ],
+    "env": {
+        "DATABASE_PATH": "./database.sqlite",
+        "LOGGING": "true",
+        "SYNCHRONIZE": "true",
+        "PORT": "3000",
+        "JWT_SECRET": "your_jwt_secret_key",
+        "JWT_EXPIRES_IN": "3600"
+    },
+    "outputDirectory": "dist"
+}
