@@ -1,9 +1,8 @@
 {
-    "version": 2,
-    "builds": [
+    "rewrites": [
         {
-            "src": "dist/main.js",
-            "use": "@vercel/nest"
+            "source": "/(.*)",
+            "destination": "/api"
         }
     ]
 }
