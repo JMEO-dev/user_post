@@ -32,7 +32,7 @@ export class PostsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.postsService.findOne(id); // ← id is string (UUID), no +id!
+    return this.postsService.findOne(id);
   }
 
   @Patch(':id')

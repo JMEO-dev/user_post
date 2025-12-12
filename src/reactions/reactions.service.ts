@@ -1,26 +1,56 @@
-import { Injectable } from '@nestjs/common';
-import { CreateReactionDto } from './dto/create-reaction.dto';
-import { UpdateReactionDto } from './dto/update-reaction.dto';
+// src/reactions/reactions.service.ts
+
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
+import { Reaction } from './entities/reaction.entity';
+import { Post } from '../posts/entities/post.entity';
 
 @Injectable()
 export class ReactionsService {
-  create(createReactionDto: CreateReactionDto) {
-    return 'This action adds a new reaction';
-  }
+  constructor(
+    @InjectRepository(Reaction)
+    private reactionRepo: Repository<Reaction>,
+    @InjectRepository(Post)
+    private postRepo: Repository<Post>,
+    private dataSource: DataSource,
+  ) { }
 
-  findAll() {
-    return `This action returns all reactions`;
-  }
+  async toggleReaction(postId: string, userId: string) {
+    return this.dataSource.transaction(async (manager) => {
+      const post = await manager.findOne(Post, {
+        where: { id: postId },
+      });
 
-  findOne(id: number) {
-    return `This action returns a #${id} reaction`;
-  }
+      if (!post) {
+        throw new NotFoundException('Post not found');
+      }
 
-  update(id: number, updateReactionDto: UpdateReactionDto) {
-    return `This action updates a #${id} reaction`;
-  }
+      // Check if user already reacted
+      const existing = await manager.findOne(Reaction, {
+        where: {
+          postId,
+          userId,
+        },
+      });
 
-  remove(id: number) {
-    return `This action removes a #${id} reaction`;
+      if (existing) {
+        // Already reacted → DELETE
+        await manager.remove(existing);
+        post.reactionCount -= 1;
+      } else {
+        // Not reacted → CREATE
+        const reaction = manager.create(Reaction, { postId, userId });
+        await manager.save(reaction);
+        post.reactionCount += 1;
+      }
+
+      await manager.save(post);
+
+      return {
+        reacted: !existing,
+        reactionsCount: post.reactionCount,
+      };
+    });
   }
 }
